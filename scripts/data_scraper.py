@@ -8,7 +8,7 @@ import os
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--metadata', default='../metadata.csv')
-    parser.add_argument('--out', default='../data')
+    parser.add_argument('--out', default='../data_raw')
     return parser.parse_args()
 
 
