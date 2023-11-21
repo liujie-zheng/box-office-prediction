@@ -31,6 +31,7 @@ def clean_and_save_csv(input_folder, output_folder):
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
 
+    count = 0
     for filename in os.listdir(input_folder):
         if filename.endswith('.csv'):
             df = pd.read_csv(os.path.join(input_folder, filename))
@@ -63,10 +64,12 @@ def clean_and_save_csv(input_folder, output_folder):
             if 'DOW' in df.columns:
                 df['DOW'] = df['DOW'].map(dow_map)
 
-            cleaned_filename = filename.split('.')[0] + '_cleaned.csv'
+            cleaned_filename = filename.split('.csv')[0] + '_cleaned.csv'
             out_path = os.path.join(output_folder, cleaned_filename)
             df.to_csv(out_path, index=False)
             print("clean filed saved to", out_path)
+            count += 1
+    print("cleaned", count, "files")
 
 
 if __name__ == "__main__":
