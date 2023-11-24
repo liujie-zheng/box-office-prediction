@@ -22,11 +22,11 @@ library(ggplot2)
 
 # The Prediction (Required)
 
-Our prediction of the cumulative domestic box office of "The Marvels" by December 8, 2023 is **\$82,212,871**
+Our prediction of the cumulative domestic box office of "The Marvels" by December 8, 2023 is **\$87, 389, 387**
 
 # Summary of Justification (Required)
 
-For this prediction task, we collected the **daily box office revenues** and the **Rotten Tomatoes scores** of all 33 Marvel movies. We found out that the cumulative domestic box office revenues of Marvel movies at their Day 29 since released are **highly correlated** with their cumulative **domestic box office at Day 13**, and are **moderately correlated** with their **Rotten Tomato scores**. We also know that for "The Marvels", December 8, 2023 is its Day 29 since released. With these information, we fit a simple linear regression model to predict the cumulative domestic box office of "The Marvels" by December 8, 2023 from its cumulative **domestic box office at November 22 (Day 13)** and its **Rotten Tomato scores**. The model has a **train percentage error of 3.239%**. Our data and code can be found at [\textcolor{blue}{this Github repository}](https://github.com/liujie-zheng/box-office-prediction).
+For this prediction task, we collected the **daily box office revenues** and the **Rotten Tomatoes scores** of all 33 Marvel movies. We found out that the cumulative domestic box office revenues of Marvel movies at their Day 29 since released are **highly correlated** with their cumulative **domestic box office at Day 13**, and are **moderately correlated** with their **Rotten Tomato scores**. We also know that for "The Marvels", December 8, 2023 is its Day 29 since released. With these information, we fit a **simple linear regression model** to predict the cumulative domestic box office of "The Marvels" by December 8, 2023 from its cumulative **domestic box office at November 22 (Day 13)** and its **Rotten Tomato scores**. The model has a **train percentage error of 3.239%**. Our data and code can be found at [\textcolor{blue}{this Github repository}](https://github.com/liujie-zheng/box-office-prediction).
 
 # Data (Required)
 
@@ -269,8 +269,8 @@ print(mape)
 The second model gives a 3.239% error. We choose to stick with the first model.
 
 ```{r}
-final_movie_2[29,4] = 64945395
+final_movie_2[29,4] = 69153446
 predict(mod1,newdata=final_movie_2[29,])
 ```
 
-Therefore, our prediction of the cumulative domestic box office of "The Marvels" by December 8, 2023 is 82212871.
+Therefore, our prediction of the cumulative domestic box office of "The Marvels" by December 8, 2023 is 87389387.
