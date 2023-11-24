@@ -6,17 +6,31 @@ output:
   word_document: default
 ---
 
-Liujie Zheng (730427441), Yuhan Zhou (730621041), Zhetao Zhang (730491003), Eliana Li (730521478)
+Liujie Zheng (730427441), Yuhan Zhou (730621041), Zhetao Zhang (730491003), Eliana Li (730521478), Haoyang Li (730610085)
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
+library(rmarkdown)
+library(tinytex)
+library(knitr)
+library(readr)
+library(leaps)
+library(dplyr)
+library(mosaic)
+library(ggplot2)
+```
 
 # The Prediction (Required)
 
-Our prediction of the cumulative domestic box office of "The Marvels" by December 8, 2023 is ...
+Our prediction of the cumulative domestic box office of "The Marvels" by December 8, 2023 is **\$82,212,871**
 
 # Summary of Justification (Required)
 
+For this prediction task, we collected the **daily box office revenues** and the **Rotten Tomatoes scores** of all 33 Marvel movies. We found out that the cumulative domestic box office revenues of Marvel movies at their Day 29 since released are **highly correlated** with their cumulative **domestic box office at Day 13**, and are **moderately correlated** with their **Rotten Tomato scores**. We also know that for "The Marvels", December 8, 2023 is its Day 29 since released. With these information, we fit a simple linear regression model to predict the cumulative domestic box office of "The Marvels" by December 8, 2023 from its cumulative **domestic box office at November 22 (Day 13)** and its **Rotten Tomato scores**. The model has a **train percentage error of 3.239%**. Our data and code can be found at [\textcolor{blue}{this Github repository}](https://github.com/liujie-zheng/box-office-prediction).
+
 # Data (Required)
 
-For this prediction task, we collected the **daily box office revenues** and the **Rotten Tomatoes scores** of all 33 Marvel movies. The daily box office revenues are extracted from [Box Office Mojo](https://www.boxofficemojo.com/) into the **data_raw** folder (scrapper code in **scripts/data_scrapper.py**); the Rotten Tomatoes scores are collected from [Wikipedia](https://en.wikipedia.org/wiki/List_of_Marvel_Cinematic_Universe_films) into the **metadata.csv**.
+For this prediction task, we collected the **daily box office revenues** and the **Rotten Tomatoes scores** of all 33 Marvel movies. The daily box office revenues are extracted from [\textcolor{blue}{Box Office Mojo}](https://www.boxofficemojo.com/), into the **data_raw** folder (scrapper code in **scripts/data_scrapper.py**); the Rotten Tomatoes scores are collected from [\textcolor{blue}{Wikipedia}](https://en.wikipedia.org/wiki/List_of_Marvel_Cinematic_Universe_films) into the **metadata.csv**.
 
 ## Metadata.csv
 
@@ -28,7 +42,7 @@ dim(metadata)
 **metadata.csv** contains 33 rows and 4 columns.
 
 ```{r}
-head(metadata)
+str(metadata)
 ```
 
 Each row of **metadata.csv** represents a Marvel movie. Explanation of each column:
@@ -53,7 +67,7 @@ dim(ant_man)
 **data_raw/Ant-Man and the Wasp.csv** contains 119 rows and 11 columns
 
 ```{r}
-head(ant_man)
+str(ant_man)
 ```
 
 Each row represents a consecutive day. Explanation of each column:
@@ -80,46 +94,183 @@ Each row represents a consecutive day. Explanation of each column:
 
 **Estimated**: Whether the box office numbers are actual (false) or estimated (true) figures. 'True' suggests that the figures are preliminary and may be adjusted later, while 'False' indicates that the figures are final
 
-For "The Marvels" movie, we have the daily box office revenue of the **first 10 days**.
+For "The Marvels" movie, we have the daily box office revenue of the **first 13 days**.
 
 ```{r}
 the_marvels = read.csv("data_raw/The Marvels.csv")
 dim(the_marvels)
-head(the_marvels)
+str(the_marvels)
 ```
 
 ## Data Cleaning
 
 To get the data ready for analysis, we:
 
-1) separated **Date** and **Event**
+1)  separated **Date** and **Event**
 
-2) turned **DOW** into 1 to 7
+2)  turned **DOW** into 1 to 7
 
-3) turned `-` mark into `NA`
+3)  turned `-` mark into `NA`
 
-4) turned columns like **Daily**, **X\...YD** and others into numeric
+4)  turned columns like **Daily**, **X\...YD** and others into numeric
 
 The data cleaning code is in **scripts/data_cleaner.py**. Here is cleaned data of "Ant-Man and the Wasp" :
 
 ```{r}
 ant_man_cleaned = read.csv("data_cleaned/Ant-Man and the Wasp_cleaned.csv")
-head(ant_man_cleaned)
+str(ant_man_cleaned)
 ```
 
 And the cleaned data of "The Marvels":
 
 ```{r}
 the_marvels_cleaned = read.csv("data_cleaned/The Marvels_cleaned.csv")
-head(the_marvels_cleaned)
+str(the_marvels_cleaned)
 ```
-
-## Data Visualization
-
-Eliana Li's part
 
 # Analysis (Required)
 
+## Data Visualization
+
+With our data cleaned, we first want to check out how the box office revenue varies with respect to the day since the movie was first released.
+
+```{r, include=FALSE}
+all_files <- list.files(path = "data_cleaned", pattern = "\\.csv$", full.names = TRUE)
+list_of_movies <- lapply(all_files, readr::read_csv)
+names(list_of_movies) <- gsub("\\_cleaned.csv$", "", all_files)
+```
+
+```{r, warning=FALSE}
+list_of_movies_40 <- lapply(list_of_movies, function(df) {
+  head(df, 40)
+})
+list_of_movies_40 <- lapply(list_of_movies_40, function(df) {
+    df$Day <- as.numeric(df$Day)
+    return(df)
+})
+```
+
+```{r, warning=FALSE}
+combined_df <- bind_rows(list_of_movies_40, .id = "DataFrameID")
+ggplot(combined_df, aes(x = Day, y = `Daily`, group = DataFrameID, color = DataFrameID)) + 
+  geom_line() +
+  geom_vline(xintercept = 29, color = "red", size = 0.5) +
+  theme_minimal() +
+  theme(text = element_text(size = 4)) +
+  labs(title = "Daily Box Office Revenue vs Days Released", x = "Day", y = "Revenue")
+```
+
+As the **Daily Box Office Revenue vs Days Released** plot tells, the daily box office revenues of the movies share a similar trend: drop drastically in the initial several days and have periodically peaks. These peaks usually represents Friday, Saturday and Tuesday.
+
+```{r}
+ggplot(combined_df, aes(x = Day, y = `To Date`, group = DataFrameID, color = DataFrameID)) + 
+  geom_line() +
+  geom_vline(xintercept = 29, color = "red", size = 0.5) +
+  theme_minimal() +
+  theme(text = element_text(size = 4)) +
+  labs(title = "Cumulative Box Office Revenue vs Days Released", x = "Day", y = "Revenue")
+```
+
+The lines in **Cumulative Box Office Revenue vs Days Released** plot barely intersects. This means that **if a movie performs well in the first several days, it will keep doing so**, and vice versa. We then suppose that from the cumulative box office revenue of "The Marvels" at Day 13, we are able to predict the box office revenue at Day 29 (December 8).
+
+We would like to further verify that by calculating the correlation between these two values.
+
+```{r}
+# Get all file names of individual marvel movies csv from the folder
+file <- list.files(path = "data_cleaned", pattern = "\\.csv$", full.names = TRUE)
+file_names <- basename(file)
+
+# helper function to extract cumulative box office revenue at a certain day
+extract_data <- function(file, day) {
+   data <- read.csv(file)
+   if (ncol(data) >= 10 && nrow(data) >= 10) {
+    return(data[day, 10])
+  }
+}
+day29 <- lapply(all_files, extract_data, 29)
+
+movie_titles <- gsub("_cleaned\\.csv", "", file_names)
+metadata <- arrange(metadata, Movie)
+final_data <- data.frame(Movie = movie_titles, Days_29 = unlist(day29))
+final_data <- arrange(final_data, Movie)
+final_data$Movie = metadata$Movie
+
+day13 <- lapply(file, extract_data, 13)
+total <- data.frame(Movie = movie_titles, Days_13 = unlist(day13))
+total <- arrange(total,Movie)
+total$Movie <- metadata$Movie
+final_data <- merge(final_data,total, by = "Movie", all = T)
+final_movie <- final_data[-29,]
+str(final_movie)
+
+cor(x=final_movie$Days_13, y=final_movie$Days_29, use='complete.obs')
+```
+
+The correlation is **\>0.99**, which is extremely high.
+
+Next, we would like to see how the **Rotten Tomato scores** influences the box office Revenue. Since the Rotten Tomato scores are in **metadata.csv**, we need to combine them with cumulative box office revenue at Day 29.
+
+```{r}
+# extact and convert the Rotten Tomato scores to numeric values
+rotten_tomato <- read.csv("metadata.csv")[-c(2,4)]
+rotten_tomato$Rotten.Tomato <- as.numeric(gsub("^(\\d+).*", "\\1", rotten_tomato$Rotten.Tomato))
+final_movie_2 <- merge(rotten_tomato, final_movie, by = "Movie", all = TRUE)
+str(final_movie_2)
+```
+
+```{r}
+ggplot(final_movie_2, aes(x = Rotten.Tomato, y = Days_29)) + 
+  geom_point() +
+  theme_minimal() +
+  labs(title = "Rotten Tomato vs Renenue at Day 29", x = "Rotten Tomato", y = "Renenue at Day 29")
+
+cor(x=final_movie_2$Rotten.Tomato, y=final_movie_2$Days_29, use='complete.obs')
+```
+
+From the plot and the correlation calculation. There exists a **intermediate positive correlation** between Rotten Tomato scores and the cumulative box office revenue at Day 29. That means we can **potentially** include it in our model.
+
 ## Simple Linear Regression
 
-Haoyang Li's part
+Given all the information we have, we decided to try out two models:
+
+-   Day_29 = beta_0 + beta_1 \* Day_13 + beta_2 \* Rotten_tomato + e
+
+-   Day_29 = beta_0 + beta_1 \* Day_13 + e
+
+```{r}
+# 29 is "The Marvels", exclude it in model fitting
+mod1 = lm(Days_29~Days_13+Rotten.Tomato,data=final_movie_2)
+prediction1 <- predict(mod1,newdata=final_movie_2)[-29]
+
+mae <- mean(abs(final_movie_2$Days_29[-29] - prediction1))
+print(mae)
+
+percentage_errors <- abs((final_movie_2$Days_29[-29] - prediction1) / 
+                           final_movie_2$Days_29[-29])
+mape <- mean(percentage_errors)
+print(mape)
+```
+
+The first model gives a 2.846% error.
+
+```{r}
+mod2 = lm(Days_29~Days_13,data=final_movie_2)
+prediction2 <- predict(mod2,newdata=final_movie_2)[-29]
+
+mae <- mean(abs(final_movie_2$Days_29[-29] - prediction2))
+print(mae)
+
+percentage_errors <- abs((final_movie_2$Days_29[-29] - prediction2) /
+                           final_movie_2$Days_29[-29])
+mape <- mean(percentage_errors)
+print(mape)
+```
+
+The second model gives a 3.239% error. We choose to stick with the first model.
+
+```{r}
+final_movie_2[29,4] = 64945395
+predict(mod1,newdata=final_movie_2[29,])
+```
+
+Therefore, our prediction of the cumulative domestic box office of "The Marvels" by December 8, 2023 is 82212871.
